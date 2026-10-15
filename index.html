@@ -422,7 +422,7 @@ document.addEventListener('keydown',e=>{
 });
 
 /* 音源清单：走 serve.py 的 /api/audio；直接双击打开 HTML 时静默降级 */
-fetch('/api/audio').then(r=>r.json()).then(m=>{audioMap=m||{};if(view==='song')songView()}).catch(()=>{});
+if(!D.static)fetch('/api/audio').then(r=>r.json()).then(m=>{audioMap=m||{};if(view==='song')songView()}).catch(()=>{});
 
 const h=location.hash.match(/^#s(\d+)$/);
 if(h&&byId(+h[1])>=0){cur=byId(+h[1]);view='song';songView()}else home('');
