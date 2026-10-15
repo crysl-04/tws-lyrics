@@ -198,20 +198,9 @@ function home(q){
           <div class="body"><div class="nm">${esc(a.name)}</div>
             <div class="mt"><span class="tag">${esc(a.kind)}</span><span>${a.date.slice(5)} · ${a.count} 首</span></div>
           </div></div>`).join('')}</div>`).join('');
-    body=`<div class="sec"><h3>快速进入</h3><small>按发行时间倒序</small></div>
-      <div class="rows">${[...D.songs].map((s,i)=>i).filter(i=>D.songs[i].position===1||/plot twist|Oh Mymy/i.test(D.songs[i].name)).slice(0,8).map(i=>{
-        const s=song(i);return `<div class="srow" data-go="${i}">${coverImg(i)}<div class="t"><b>${esc(s.name)}</b>
-          <small>${esc(s.album)} · ${esc(s.date)}</small></div><span class="r">${esc(s.duration)}</span></div>`}).join('')}</div>`+body;
   }
   V().innerHTML=`<div class="hero">
       <h2>${q?'搜索歌词':'TWS 歌词面板'}</h2>
-      <p>${q?'跨原文、罗马音与中文译词的全库检索。':'出道至今全部发行里的歌词，原文 / 罗马音 / 中译三行对照。点封面进专辑，点曲目看歌词。'}</p>
-      <div class="chips">
-        <span class="chip">${st.albums} 张发行</span><span class="chip">${st.songs} 首曲目</span>
-        <span class="chip">${st.lines} 行歌词</span><span class="chip b">${st.from} → ${st.to}</span>
-        <span class="chip b">有中译 ${st.trans}/${st.songs}</span><span class="chip b">有罗马音 ${st.rom}/${st.songs}</span>
-        <span class="chip w">收藏 ${FAV.size} 首</span>
-      </div>
       <div class="searchbar"><input id="q" placeholder="搜歌名 / 专辑 / 任意一句歌词（韩文、罗马音、中文都行）" value="${esc(q||'')}">
         <button class="btn pri" id="bRand">随机一首</button></div>
       ${!q?`<div class="chips" style="margin-top:12px">
