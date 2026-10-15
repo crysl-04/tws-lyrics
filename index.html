@@ -180,7 +180,7 @@ function toast(t){const e=document.getElementById('toast');e.textContent=t;e.cla
 
 /* ---------- 首页 ---------- */
 function home(q){
-  const st=D.stats, latest=D.albums[0];
+  const latest=D.albums[0];
   const hit=q?search(q):null;
   let body='';
   if(q){
@@ -206,7 +206,6 @@ function home(q){
       ${!q?`<div class="chips" style="margin-top:12px">
         <span class="chip" data-jump="new" style="cursor:pointer">最新发行：${esc(latest.name)}</span>
         <span class="chip" data-jump="fav" style="cursor:pointer">只看收藏</span>
-        <span class="chip" data-jump="notr" style="cursor:pointer">缺中译的 ${st.songs-st.trans} 首</span>
       </div>`:''}
     </div>${body}`;
   bindHome();
