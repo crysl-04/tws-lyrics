@@ -104,11 +104,13 @@ html.no-ts .ln{grid-template-columns:1fr}
 .trn{color:var(--soft);margin-top:3px}
 .player{margin-top:14px;background:var(--blue-bg);border:1px solid var(--line);border-radius:11px;padding:11px 13px}
 .player audio{width:100%;height:34px}
-/* 播放条最右侧的 ⋮ 是浏览器原生控件里的"更多选项"，音频条上它只装了一个倍速。
-   这个按钮不是我能碰的 DOM 节点，网上常见的 ::-webkit-media-controls-overflow-button
-   {display:none} 在新版 Chromium 已实测无效（headless Chrome + Edge 截图对比过）。
-   真正生效的是 audio 标签上的 controlsList="noplaybackrate"：菜单空了，按钮整块消失，
-   代价是失去倍速入口。 */
+/* 播放条最右侧的 ⋮ 是浏览器原生控件的"更多选项"菜单，能不能消失取决于菜单里还有没有东西：
+   真实浏览器里音频的菜单通常有"倍速"和"下载"两项，所以 controlsList 要把它们都关掉，
+   只写 noplaybackrate 会剩下"下载"、按钮照样在。
+   两个坑：① 网上抄烂的 ::-webkit-media-controls-overflow-button{display:none} 在新版
+   Chromium 已完全无效；② headless Chrome 的菜单里没有"下载"项，用它验证会得出
+   "只加 noplaybackrate 就够了"的错误结论，这类"原生控件长什么样"的判断要以真实浏览器
+   截图为准。副作用：倍速入口没了（音频条上本来也只有这一项功能）。 */
 .player .fn{font-size:11.5px;color:var(--soft);margin-bottom:6px;display:flex;gap:8px;align-items:center}
 .noaudio{margin-top:14px;font-size:12.5px;color:var(--faint);border:1px dashed var(--line);border-radius:11px;padding:11px 13px}
 .drawer{position:fixed;right:14px;top:60px;width:288px;max-height:calc(100vh - 80px);overflow:auto;background:var(--panel);
@@ -306,7 +308,7 @@ function songView(){
       </div>
       ${file?`<div class="player"><div class="fn"><span class="tag">音源已匹配</span><span>${esc(file)}</span>
           <span class="spacer"></span><label class="chks" style="font-size:11.5px"><input type="checkbox" id="cAuto2" ${S.auto?'checked':''}> 自动滚动</label></div>
-        <audio id="au" controls controlsList="noplaybackrate" src="${D.apx}${String(file).split('/').map(encodeURIComponent).join('/')}"></audio></div>`
+        <audio id="au" controls controlsList="noplaybackrate nodownload noremoteplayback" src="${D.apx}${String(file).split('/').map(encodeURIComponent).join('/')}"></audio></div>`
         :D.static?'':`<div class="noaudio">把音频放进 <b>audio/</b> 文件夹即可自动匹配，匹配后开启逐行高亮。</div>`}
       <div class="lines" id="lines">${lyricHTML(s)}</div>
     </div></div>`;
