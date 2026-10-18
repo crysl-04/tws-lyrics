@@ -69,7 +69,7 @@ button{font-family:inherit}
 .srow .r{color:var(--faint);font-size:11.5px;white-space:nowrap}
 .grid2{display:grid;grid-template-columns:250px 1fr;gap:22px;align-items:start}
 .side{background:var(--panel);border:1px solid var(--line);border-radius:14px;padding:14px;box-shadow:var(--shadow);
-  position:sticky;top:70px}
+  position:sticky;top:70px;max-height:calc(100vh - 88px);overflow:auto;scrollbar-width:thin}
 .side img{width:100%;border-radius:10px;display:block;aspect-ratio:1;object-fit:cover}
 .side .an{font-size:13.5px;font-weight:600;margin:10px 0 2px}
 .side .ad{font-size:11.5px;color:var(--faint);margin-bottom:10px}
@@ -103,15 +103,22 @@ html.no-ts .ln{grid-template-columns:1fr}
 .rom{color:var(--blue);font-size:.85em;margin-top:3px}
 .trn{color:var(--soft);margin-top:3px}
 .player{margin-top:14px;background:var(--blue-bg);border:1px solid var(--line);border-radius:11px;padding:11px 13px}
-.player audio{width:100%;height:34px}
-/* 播放条最右侧的 ⋮ 是浏览器原生控件的"更多选项"菜单，能不能消失取决于菜单里还有没有东西：
-   真实浏览器里音频的菜单通常有"倍速"和"下载"两项，所以 controlsList 要把它们都关掉，
-   只写 noplaybackrate 会剩下"下载"、按钮照样在。
-   两个坑：① 网上抄烂的 ::-webkit-media-controls-overflow-button{display:none} 在新版
-   Chromium 已完全无效；② headless Chrome 的菜单里没有"下载"项，用它验证会得出
-   "只加 noplaybackrate 就够了"的错误结论，这类"原生控件长什么样"的判断要以真实浏览器
-   截图为准。副作用：倍速入口没了（音频条上本来也只有这一项功能）。 */
-.player .fn{font-size:11.5px;color:var(--soft);margin-bottom:6px;display:flex;gap:8px;align-items:center}
+.player audio{display:none}
+/* 播放器住在左侧信息卡下面，不用浏览器原生的 <audio controls>，自绘一条紧凑播放条。两个原因：
+   ① 那一列只有 250px，扣掉卡片和播放器内边距后原生播放条只剩约 202px，进度条会缩成一小截
+     （Edge 无头截图逐档量过：200px 几乎没法拖，288px 才开始像样）；
+   ② 原生控件右侧那个 ⋮（"更多选项"）没法用 CSS 关掉——::-webkit-media-controls-overflow-button
+     在新版 Chromium 已完全无效；用 controlsList 得把"倍速""下载"全关掉菜单才会空掉消失，
+     而 headless Chrome 的菜单里根本没有"下载"项，拿它验证会得出"只关倍速就够了"的错结论。
+   不挂 controls 就一了百了：所有浏览器都不会再有 ⋮，宽度也自己说了算。 */
+.side .player{display:flex;gap:9px;align-items:center;margin:12px 0 0;padding:10px}
+.side .pp{flex:0 0 30px;width:30px;height:30px;border:none;border-radius:50%;background:var(--green);color:#fff;
+  font-size:11px;line-height:1;cursor:pointer;display:flex;align-items:center;justify-content:center;padding:0 0 0 2px}
+.side .pp:active{transform:scale(.94)}
+.side .mid{flex:1 1 auto;min-width:0}
+.side #sk{width:100%;display:block;margin:0;height:16px;accent-color:var(--green);cursor:pointer}
+.side #sk:disabled{opacity:.4;cursor:default}
+.side .tm{font-size:10.5px;color:var(--faint);text-align:right;font-variant-numeric:tabular-nums;line-height:1.3}
 .noaudio{margin-top:14px;font-size:12.5px;color:var(--faint);border:1px dashed var(--line);border-radius:11px;padding:11px 13px}
 .drawer{position:fixed;right:14px;top:60px;width:288px;max-height:calc(100vh - 80px);overflow:auto;background:var(--panel);
   border:1px solid var(--line);border-radius:13px;padding:16px;box-shadow:0 14px 40px rgba(0,0,0,.16);z-index:50;display:none}
@@ -290,7 +297,13 @@ function songView(){
       <div class="ad">${esc(a.kind||'')} · ${esc(s.date)} · ${a.count||''} 首</div>
       ${mates.map(i=>{const m=song(i);return `<div class="tr ${i===cur?'on':''}" data-go="${i}">
         <span class="n">${esc(m.position||'')}</span><span>${esc(m.name)}</span><span class="star">${FAV.has(m.id)?'★':'☆'}</span></div>`}).join('')}
-      <div class="ad" style="margin-top:10px"><button class="btn" data-home="1" style="width:100%">← 回首页</button></div></div>
+      <div class="ad" style="margin-top:10px"><button class="btn" data-home="1" style="width:100%">← 回首页</button></div>
+      ${file?`<div class="player" title="${esc(file)}">
+          <button class="pp" id="bPlay" aria-label="播放 / 暂停">▶</button>
+          <div class="mid"><input type="range" id="sk" min="0" max="0" step="0.1" value="0" disabled>
+            <div class="tm"><span id="tCur">00:00</span> / <span id="tDur">${esc(s.duration||'--:--')}</span></div></div>
+        <audio id="au" preload="metadata" src="${D.apx}${String(file).split('/').map(encodeURIComponent).join('/')}"></audio></div>`
+        :D.static?'':`<div class="noaudio">把音频放进 <b>audio/</b> 文件夹即可自动匹配，匹配后开启逐行高亮。</div>`}</div>
     <div class="panel">
       <div class="songhead"><h2>${esc(s.name)}</h2>
         <div class="metaline"><span class="chip">${esc(s.album)}</span><span class="chip">${esc(s.date)}</span>
@@ -306,10 +319,6 @@ function songView(){
         <button class="btn" id="bPrevA" ${cur<=0?'disabled':''}>← 上一首</button>
         <button class="btn" id="bNextA" ${cur>=D.songs.length-1?'disabled':''}>下一首 →</button>
       </div>
-      ${file?`<div class="player"><div class="fn"><span class="tag">音源已匹配</span><span>${esc(file)}</span>
-          <span class="spacer"></span><label class="chks" style="font-size:11.5px"><input type="checkbox" id="cAuto2" ${S.auto?'checked':''}> 自动滚动</label></div>
-        <audio id="au" controls controlsList="noplaybackrate nodownload noremoteplayback" src="${D.apx}${String(file).split('/').map(encodeURIComponent).join('/')}"></audio></div>`
-        :D.static?'':`<div class="noaudio">把音频放进 <b>audio/</b> 文件夹即可自动匹配，匹配后开启逐行高亮。</div>`}
       <div class="lines" id="lines">${lyricHTML(s)}</div>
     </div></div>`;
   V().querySelectorAll('[data-go]').forEach(e=>e.onclick=()=>go(+e.dataset.go));
@@ -319,7 +328,6 @@ function songView(){
   V().querySelector('#bCopy').onclick=copyLyric;
   V().querySelector('#bPrevA').onclick=()=>go(cur-1);
   V().querySelector('#bNextA').onclick=()=>go(cur+1);
-  const c2=V().querySelector('#cAuto2'); if(c2)c2.onchange=e=>{S.auto=e.target.checked;save()};
   V().querySelectorAll('.ts').forEach(e=>e.onclick=()=>{const au=V().querySelector('#au');
     if(au){au.currentTime=+e.parentElement.dataset.t;au.play()}else{e.parentElement.scrollIntoView({block:'center'})}});
   bindAudio();
@@ -328,13 +336,32 @@ function songView(){
 function bindAudio(){
   const au=V().querySelector('#au'); if(!au)return;
   const s=song(cur);
+  const pp=V().querySelector('#bPlay'), sk=V().querySelector('#sk'),
+        tCur=V().querySelector('#tCur'), tDur=V().querySelector('#tDur');
+  // 播放条是自绘的，所以状态一律从 audio 元素的事件反向同步：空格键、点歌词时间戳
+  // 这些入口都只改 au，按钮图标跟着 play/pause 走，不会出现"在放但显示暂停"。
+  const paint=()=>{if(pp)pp.textContent=au.paused?'▶':'❚❚'};
   au.addEventListener('timeupdate',()=>{
     const t=au.currentTime; let n=-1;
     for(let i=0;i<s.lines.length;i++) if(s.lines[i].t<=t+0.25) n=i;
     const old=V().querySelector('.ln.act'); if(old)old.classList.remove('act');
     if(n>=0){const el=V().querySelector(`.ln[data-n="${n}"]`);
       if(el){el.classList.add('act'); if(S.auto&&!el._offscreen)el.scrollIntoView({block:'center',behavior:'smooth'})}}
+    if(sk&&!sk.dataset.drag)sk.value=t;
+    if(tCur&&!sk?.dataset.drag)tCur.textContent=fmt(t);
   });
+  au.addEventListener('loadedmetadata',()=>{
+    if(sk){sk.max=au.duration||0; sk.disabled=false}
+    if(tDur)tDur.textContent=fmt(au.duration||0);
+  });
+  au.addEventListener('play',paint); au.addEventListener('pause',paint);
+  if(pp)pp.onclick=()=>{au.paused?au.play():au.pause()};
+  if(sk){
+    sk.onpointerdown=()=>{sk.dataset.drag='1'};
+    sk.oninput=()=>{if(tCur)tCur.textContent=fmt(+sk.value)};
+    const drop=()=>{au.currentTime=+sk.value; delete sk.dataset.drag};
+    sk.onchange=drop; sk.onkeyup=e=>{if(['ArrowLeft','ArrowRight','Home','End'].includes(e.key))drop()};
+  }
   au.addEventListener('error',()=>toast('音源读取失败：确认文件在 audio/ 里且浏览器能解码该格式'));
 }
 
